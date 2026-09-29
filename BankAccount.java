@@ -23,8 +23,13 @@ public class BankAccount {
     }
 
     public double getBalance() {
+    lock.lock();
+    try {
         return balance;
+    } finally {
+        lock.unlock();
     }
+}
 
     public void deposit(double amount) {
         lock.lock();
@@ -40,17 +45,23 @@ public class BankAccount {
     }
 
     public boolean withdraw(double amount) {
-        if (amount > 0 && amount <= balance) {
-            balance -= amount;
-            return true;    
-            } 
-        else {
-            System.out.println("Insufficient funds or invalid withdrawal amount.");
-            return false;
+        lock.lock();
+        try {
+            if (amount > 0 && amount <= balance) {
+                balance -= amount;
+                return true;
+            } else {
+                System.out.println("Insufficient funds or invalid withdrawal amount.");
+                return false;
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
-
+    ReentrantLock getLock() {
+    return lock;
+}
 
 
 }

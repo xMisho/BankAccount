@@ -1,11 +1,14 @@
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public final class Bank {
 
     private final ConcurrentHashMap<Integer, BankAccount> accounts;
+    private final ConcurrentLinkedQueue<Transaction> transactionHistory;
 
     public Bank() {
         accounts = new ConcurrentHashMap<>();
+        transactionHistory = new ConcurrentLinkedQueue<>();
     }
 
     public boolean addAccount(BankAccount account) {
@@ -20,6 +23,39 @@ public final class Bank {
 
     public BankAccount getAccount(int accountID) {
         return accounts.get(accountID);
+    }
+
+    public boolean deposit(int accountID, double amount) {
+        BankAccount account = accounts.get(accountID);
+        if (account == null) {
+            return false;
+        }
+
+        if (amount <= 0) {
+            return false;
+        }
+
+        account.deposit(amount);
+        transactionHistory.add(
+                new Transaction("DEPOSIT", amount, -1, accountID)
+        );
+        return true;
+    }
+
+    public boolean withdraw(int accountID, double amount) {
+        BankAccount account = accounts.get(accountID);
+        if (account == null) {
+            return false;
+        }
+
+        if (!account.withdraw(amount)) {
+            return false;
+        }
+
+        transactionHistory.add(
+                new Transaction("WITHDRAW", amount, accountID, -1)
+        );
+        return true;
     }
 
     public boolean accountExists(int accountID) {
@@ -79,18 +115,46 @@ public final class Bank {
         secondAccount = fromAccount;
         }
 
-        synchronized (firstAccount) {
-            synchronized (secondAccount) {
+        firstAccount.getLock().lock();
+        try {
+            secondAccount.getLock().lock();
+            try {
                 if (fromAccount.withdraw(amount)) {
                     toAccount.deposit(amount);
+
+                    transactionHistory.add(
+                        new Transaction(
+                            "TRANSFER",
+                            amount,
+                            fromAccountID,
+                            toAccountID
+                        )
+                    );
+
                     return true;
                 }
 
                 System.out.println("Transfer failed due to insufficient funds.");
                 return false;
+            } finally {
+                secondAccount.getLock().unlock();
             }
+        } finally {
+            firstAccount.getLock().unlock();
         }
     }
+
+    public void displayTransactionHistory() {
+    for (Transaction transaction : transactionHistory) {
+        System.out.println(
+                "Type: " + transaction.getType() +
+                ", Amount: " + transaction.getAmount() +
+                ", From: " + transaction.getFromAccountID() +
+                ", To: " + transaction.getToAccountID()
+        );
+    }
+}
+
 }
 
 
