@@ -5,50 +5,72 @@ public class Main {
         Bank bank = new Bank();
 
         BankAccount account1 =
-                new BankAccount(1, "Misho", 1000);
+                new BankAccount(1, "Mike", 100_000);
 
         BankAccount account2 =
-                new BankAccount(2, "Sara", 1000);
+                new BankAccount(2, "John", 100_000);
 
         bank.addAccount(account1);
         bank.addAccount(account2);
 
-        System.out.println("Starting balances:");
-        System.out.println("Misho: " + account1.getBalance());
-        System.out.println("Sara: " + account2.getBalance());
+        Thread depositThread = new Thread(() -> {
 
-        System.out.println("\nManual transfers:");
-
-        bank.transfer(1, 2, 300);
-        bank.transfer(2, 1, 50);
-
-        Thread thread1 = new Thread(() -> {
-
-            for (int i = 0; i < 5; i++) {
-                bank.transfer(1, 2, 10);
+            for (int i = 0; i < 10_000; i++) {
+                bank.deposit(1, 1);
             }
 
         });
 
-        Thread thread2 = new Thread(() -> {
+        Thread withdrawThread = new Thread(() -> {
 
-            for (int i = 0; i < 5; i++) {
-                bank.transfer(2, 1, 10);
+            for (int i = 0; i < 10_000; i++) {
+                bank.withdraw(2, 1);
             }
 
         });
 
-        thread1.start();
-        thread2.start();
+        Thread transferThread1 = new Thread(() -> {
 
-        thread1.join();
-        thread2.join();
+            for (int i = 0; i < 10_000; i++) {
+                bank.transfer(1, 2, 1);
+            }
 
-        System.out.println("\nFinal balances:");
-        System.out.println("Misho: " + account1.getBalance());
-        System.out.println("Sara: " + account2.getBalance());
+        });
 
-        System.out.println("\nTransaction history:");
-        bank.displayTransactionHistory();
+        Thread transferThread2 = new Thread(() -> {
+
+            for (int i = 0; i < 10_000; i++) {
+                bank.transfer(2, 1, 1);
+            }
+
+        });
+
+        depositThread.start();
+        withdrawThread.start();
+        transferThread1.start();
+        transferThread2.start();
+
+        depositThread.join();
+        withdrawThread.join();
+        transferThread1.join();
+        transferThread2.join();
+
+        System.out.println("=== FINAL RESULTS ===");
+
+        System.out.println(
+                "Account 1 balance: " + account1.getBalance()
+        );
+
+        System.out.println(
+                "Account 2 balance: " + account2.getBalance()
+        );
+
+        System.out.println(
+                "Transaction count: " + bank.getTransactionCount()
+        );
+
+        System.out.println(
+                "Account count: " + bank.getAccountCount()
+        );
     }
 }

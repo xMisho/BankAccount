@@ -1,14 +1,17 @@
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Bank {
 
     private final ConcurrentHashMap<Integer, BankAccount> accounts;
     private final ConcurrentLinkedQueue<Transaction> transactionHistory;
+    private final AtomicInteger transactionCount;
 
     public Bank() {
         accounts = new ConcurrentHashMap<>();
         transactionHistory = new ConcurrentLinkedQueue<>();
+        transactionCount = new AtomicInteger();
     }
 
     public boolean addAccount(BankAccount account) {
@@ -25,21 +28,24 @@ public final class Bank {
         return accounts.get(accountID);
     }
 
+    public int getAccountCount() {
+        return accounts.size();
+    }
+
     public boolean deposit(int accountID, double amount) {
         BankAccount account = accounts.get(accountID);
-        if (account == null) {
+        if (account == null || !Double.isFinite(amount) || amount <= 0) {
             return false;
         }
 
-        if (amount <= 0) {
-            return false;
+        account.getLock().lock();
+        try {
+            account.deposit(amount);
+            recordTransaction(new Transaction("DEPOSIT", amount, -1, accountID));
+            return true;
+        } finally {
+            account.getLock().unlock();
         }
-
-        account.deposit(amount);
-        transactionHistory.add(
-                new Transaction("DEPOSIT", amount, -1, accountID)
-        );
-        return true;
     }
 
     public boolean withdraw(int accountID, double amount) {
@@ -48,23 +54,30 @@ public final class Bank {
             return false;
         }
 
-        if (!account.withdraw(amount)) {
-            return false;
-        }
+        account.getLock().lock();
+        try {
+            if (!account.withdraw(amount)) {
+                return false;
+            }
 
-        transactionHistory.add(
-                new Transaction("WITHDRAW", amount, accountID, -1)
-        );
-        return true;
+            recordTransaction(new Transaction("WITHDRAW", amount, accountID, -1));
+            return true;
+        } finally {
+            account.getLock().unlock();
+        }
+    }
+
+    public int getTransactionCount() {
+        return transactionCount.get();
+    }
+
+    private void recordTransaction(Transaction transaction) {
+        transactionHistory.add(transaction);
+        transactionCount.incrementAndGet();
     }
 
     public boolean accountExists(int accountID) {
-        if (accounts.containsKey(accountID)) {
-            return true;
-        } else {
-            System.out.println("Account with ID " + accountID + " does not exist.");
-            return false;
-        }
+        return accounts.containsKey(accountID);
     }       
 
     public boolean removeAccount(int accountID) {
@@ -122,13 +135,8 @@ public final class Bank {
                 if (fromAccount.withdraw(amount)) {
                     toAccount.deposit(amount);
 
-                    transactionHistory.add(
-                        new Transaction(
-                            "TRANSFER",
-                            amount,
-                            fromAccountID,
-                            toAccountID
-                        )
+                    recordTransaction(
+                            new Transaction("TRANSFER", amount, fromAccountID, toAccountID)
                     );
 
                     return true;
@@ -154,6 +162,20 @@ public final class Bank {
         );
     }
 }
+
+    public void displayTransactionsForAccount(int accountID) {
+        for (Transaction transaction : transactionHistory) {
+            if (transaction.getFromAccountID() == accountID
+                    || transaction.getToAccountID() == accountID) {
+                System.out.println(
+                        "Type: " + transaction.getType() +
+                        ", Amount: " + transaction.getAmount() +
+                        ", From: " + transaction.getFromAccountID() +
+                        ", To: " + transaction.getToAccountID()
+                );
+            }
+        }
+    }
 
 }
 
