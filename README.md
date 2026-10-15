@@ -2,7 +2,7 @@
 
 A concurrent Java banking simulation focused on deposits, withdrawals, transfers, transaction tracking, and safe lock ordering.
 
-Java 17+ · Maven · JUnit 5 · No production dependencies
+Java 17+ · Maven · JUnit 5 · No runtime dependencies
 
 ## Features
 
@@ -10,7 +10,7 @@ Java 17+ · Maven · JUnit 5 · No production dependencies
 - Deposits and withdrawals with transaction recording.
 - Transfers lock both accounts in account-ID order.
 - Per-account reentrant locks protect balance updates and reads.
-- Concurrent account storage and transaction history.
+- Thread-safe account storage and concurrent transaction history.
 - Atomic transaction count and account-specific history display.
 
 ## Technical concepts
