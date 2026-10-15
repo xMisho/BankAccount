@@ -71,7 +71,7 @@ Surefire writes detailed results to `target/surefire-reports/`. Concurrency test
 
 ## Example behavior
 
-Use these classes from the `com.misho.bank` package (and import `java.math.BigDecimal` for the exchange example):
+Use these classes from the `com.misho.bank` package:
 
 ```java
 Bank bank = new Bank();
@@ -86,7 +86,7 @@ System.out.println(bank.getTransactionCount());     // 1
 
 ## Scope and limitations
 
-This is a concurrency exercise, not a production banking service. Amounts use `double`; real financial software needs a carefully specified decimal or integer money model. Constructor validation and direct account deposits are intentionally basic. Prefer bank operations when transaction tracking is required.
+This is a concurrency exercise, not a production banking service. Amounts use `double`; real financial software needs a carefully specified decimal or integer money model. Account constructors do not validate the ID, owner, or opening balance. `Bank.deposit()` rejects non-finite amounts, but direct `BankAccount.deposit()` accepts positive infinity; amount validation is not consistent across all entry points. Successful operations performed through `Bank` are recorded; direct account operations are not.
 
 Account removal is not coordinated with in-flight operations; keep the account registry stable during concurrent transactions. Transaction-history views and counters are separate observations, not a transactional snapshot. There is no persistence, authentication, network service, or audit durability.
 
