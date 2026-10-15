@@ -1,4 +1,4 @@
-package BankAccount;
+package com.misho.bank;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -80,7 +80,7 @@ public final class Bank {
 
     public boolean accountExists(int accountID) {
         return accounts.containsKey(accountID);
-    }       
+    }
 
     public boolean removeAccount(int accountID) {
         if (accounts.remove(accountID) != null) {
@@ -122,12 +122,11 @@ public final class Bank {
         BankAccount secondAccount;
 
         if (fromAccountID < toAccountID) {
-        firstAccount = fromAccount;
-        secondAccount = toAccount;
-        } else  
-        {
-        firstAccount = toAccount;
-        secondAccount = fromAccount;
+            firstAccount = fromAccount;
+            secondAccount = toAccount;
+        } else {
+            firstAccount = toAccount;
+            secondAccount = fromAccount;
         }
 
         firstAccount.getLock().lock();
@@ -155,15 +154,15 @@ public final class Bank {
     }
 
     public void displayTransactionHistory() {
-    for (Transaction transaction : transactionHistory) {
-        System.out.println(
-                "Type: " + transaction.getType() +
-                ", Amount: " + transaction.getAmount() +
-                ", From: " + transaction.getFromAccountID() +
-                ", To: " + transaction.getToAccountID()
-        );
+        for (Transaction transaction : transactionHistory) {
+            System.out.println(
+                    "Type: " + transaction.getType() +
+                    ", Amount: " + transaction.getAmount() +
+                    ", From: " + transaction.getFromAccountID() +
+                    ", To: " + transaction.getToAccountID()
+            );
+        }
     }
-}
 
     public void displayTransactionsForAccount(int accountID) {
         for (Transaction transaction : transactionHistory) {

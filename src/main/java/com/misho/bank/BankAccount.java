@@ -1,4 +1,4 @@
-package BankAccount;
+package com.misho.bank;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,13 +25,13 @@ public class BankAccount {
     }
 
     public double getBalance() {
-    lock.lock();
-    try {
-        return balance;
-    } finally {
-        lock.unlock();
+        lock.lock();
+        try {
+            return balance;
+        } finally {
+            lock.unlock();
+        }
     }
-}
 
     public void deposit(double amount) {
         lock.lock();
@@ -62,8 +62,8 @@ public class BankAccount {
     }
 
     ReentrantLock getLock() {
-    return lock;
-}
+        return lock;
+    }
 
 
 }

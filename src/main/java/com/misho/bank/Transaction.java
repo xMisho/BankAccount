@@ -1,4 +1,4 @@
-package BankAccount;
+package com.misho.bank;
 
 public class Transaction {
     
